@@ -1,0 +1,8 @@
+{
+  "node": true,
+  "sub": false,
+  "unused": "vars",
+  "validthis": true,
+  "-W065": false, // disable: Missing radix parameter.
+  "maxcomplexity": 7
+}

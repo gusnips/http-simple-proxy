@@ -1,0 +1,235 @@
+#!/usr/bin/env node
+'use strict';
+
+var path = require('path'),
+  fs = require('fs'),
+  argv = require('yargs')
+  .argv,
+  HttpSimpleProxy = require('../src/HttpSimpleProxy'),
+  util = require('util');
+
+process.title = 'http-simple-proxy';
+
+function logError(str) {
+  if (argv.silent || config.silent)
+    return;
+  console.error(str);
+}
+function logNotice(str) {
+  if (argv.silent || config.silent)
+    return;
+  console.log(str);
+}
+
+var help = [
+  'usage: http-simple-proxy [options] ',
+  '',
+  'Starts a http-simple-proxy server using the specified command-line options',
+  '',
+  'options:',
+  '  --version',
+  '  --config CONFIGFILE     Configuration file (YAML or JSON)',
+  '  --configloader JS-FILE  Provide js file as config loader',
+  '  --configloader-test     Test config configloader by printing out its output',
+  '  --watch                 Watch config for changes and automatically reload with zero downtime',
+  '  --silent                Silence the log output',
+  '  --user   USER           User to drop privileges to once server socket is bound',
+  '  --group  GROUP          Group to drop privileges to once server socket is bound',
+  '  --show-rules            Show all rules upon every config load',
+  '  -h, --help              You\'re staring at it',
+  'See https://github.com/gusnips/http-simple-proxy for further info'
+].join('\n');
+
+if(argv.version) {
+  return console.log(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'))).version);
+}
+
+if (argv.h || argv.help || !argv.config || argv.config === true) {
+  return console.log(help);
+}
+
+var config = {};
+
+if (argv['configloader-test']) {
+  if(!argv.configloader) {
+    console.log('Please provide valid script as argument for --configloader');
+    process.exit(1);
+  }
+
+  require(argv.configloader)(argv, fs.readFileSync(argv.config).toString('utf8'), function(err, config) {
+    if(err) throw err;
+    console.log(JSON.stringify(config, null, 2));
+  });
+  return;
+}
+
+if (!argv.config && !argv.configloader) {
+  logError('either --config or --configloader is mandatory');
+  process.exit();
+}
+
+var droppedPrivileges = false;
+
+function dropPrivileges() {
+  var strInfo;
+  if (process.setgid) {
+    var group = config.group;
+    if (typeof group === 'string') {
+      process.setgid(group);
+      strInfo = group;
+    }
+  }
+  if (process.setuid) {
+    var user = config.user;
+    if (typeof user === 'string') {
+      process.setuid(user);
+      if (strInfo)
+        strInfo = user + ':' + strInfo;
+      else
+        strInfo = user;
+    }
+  }
+
+  if (!droppedPrivileges && strInfo)
+    logNotice('Dropped privileges to: ' + strInfo);
+  droppedPrivileges = true;
+}
+
+function patchConfigWithArgv(config) {
+  if(typeof argv.workers !== 'undefined') {
+    config.workerCount = argv.workers;
+  }
+
+  if(argv.user)
+    config.user = argv.user;
+  if(argv.group)
+    config.group = argv.group;
+  if(argv.silent)
+    config.silent = argv.silent;
+  if(argv.debug)
+    config.debug = argv.debug;
+
+  if(typeof config.workerCount == 'undefined') {
+    config.workerCount = numCPUs;
+  }
+}
+
+var yaml = require('js-yaml');
+
+function fetchConfig(finish) {
+  var configloader;
+  //console.log(fs.statSync(argv.configloader));
+  if (argv.configloader) {
+    configloader = require(argv.configloader);
+  } else {
+    configloader = function(argv, data, finish) {
+      data = data.replace('\n', '\r\n');
+      var oldWarn = console.warn;
+      try {
+        console.warn = function() {};
+        finish(null, yaml.safeLoad(data, {
+          onWarning: function() {}
+        }));
+        console.warn = oldWarn;
+      } catch(err) {
+        console.warn = oldWarn;
+        finish(err);
+      }
+    };
+  }
+
+  fs.readFile(argv.config, function(err, data) {
+    if(err) return finish(err);
+    data = data.toString('utf8');
+    try {
+      configloader(argv, data, function(err, config) {
+        if(err) return finish(err);
+        if(argv['show-rules'])
+          logNotice(util.inspect(config.ports, {depth: null}));
+        patchConfigWithArgv(config);
+
+        finish(err, config);
+      });
+    } catch(err) {
+      finish(err);
+    }
+  });
+}
+
+var startTime = new Date().getTime();
+var master = new HttpSimpleProxy();
+
+master.on('logNotice', logNotice);
+master.on('logError', logError);
+
+var originalLog = console.log;
+var originalError = console.error;
+
+function setConsole(config) {
+  if(config.silent) {
+    console.log = function(msg) {
+      master.emit('feedNotice', msg);
+    }
+    console.error = function(msg) {
+      master.emit('feedError', msg);
+    }
+  } else {
+    console.log = originalLog;
+    console.error = originalError;
+  }
+}
+
+var numCPUs = require('os').cpus().length;
+fetchConfig(function(err, parsedConfig) {
+  if(err) {
+    throw err;
+  }
+  config = parsedConfig;
+  setConsole(config);
+
+  master.init(config, function(err) {
+    if(err) {
+      logError('Workers failed to start');
+      throw err;
+    }
+    master.logNotice('All workers started in ' + (new Date().getTime() - startTime) + 'ms');
+    dropPrivileges();
+
+    var watch = require('node-watch');
+    if (config.watchConfig || argv.watch) {
+      watch(argv.config, function() {
+        master.logNotice('Reloading workers due to config change');
+        fetchConfig(function(err, parsedConfig) {
+          if(err) return logNotice('Skipping reload due to config error: ' + err.stack.toString());
+          config = parsedConfig;
+          setConsole(config);
+
+          var startTime = new Date().getTime();
+          master.reload(config, function(err) {
+            master.logNotice('All workers reloaded, downtime was ' + (new Date().getTime() - startTime) + 'ms');
+          });
+        });
+      });
+    }
+
+    process.on('SIGUSR1', function() {
+      logNotice('USR1: Reloading config');
+
+      // TODO: assure it is not called in the middle of reload
+      fetchConfig(function(err, parsedConfig) {
+        if(err) return logNotice('Skipping reload due to config error');
+        config = parsedConfig;
+        setConsole(config);
+        var startTime = new Date().getTime();
+        master.reload(config, function(err) {
+          master.logNotice('All workers reloaded, downtime was ' + (new Date().getTime() - startTime) + 'ms');
+        });
+      });
+    });
+
+    process.on('uncaughtException', function(err) {
+      logError('[Uncaught exception in master] ' + err.stack || err.message);
+      console.warn('[Uncaught exception in master] ' + err.stack || err.message);
+    });
+  });
+});
