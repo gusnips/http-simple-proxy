@@ -1,6 +1,6 @@
 {
   "name": "http-simple-proxy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple http/https proxy daemon. Proxying based on excellent node-http-master.",
   "main": "src/HttpSimpleProxy.js",
   "repository": {
