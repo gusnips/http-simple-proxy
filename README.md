@@ -324,34 +324,6 @@ ports: {
 }
 ```
 
-## Automatic free SSL with Letsencrypt
-The following configuration will enable free encryption of websites. See [https://letsencrypt.org/](letsencrypt website) for details.
-
-```YAML
-ports: {
-  80: {
-    router: {
-      "virtkick.com": "https://virtkick.com/[path]",
-    }
-  },
-  443: {
-    router: {
-      "virtkick.com": 3333
-    },
-    ssl: {
-      letsencrypt: true
-    }
-  }
-},
-modules: {
-  letsencrypt: {
-    configDir: '/etc/letsencrypt', # needs to be writable
-    email: 'your@email.com',
-    agreeTos: true
-  }
-}
-```
-
 ## SSL
 SSL can be configured for any port by simply providing "ssl" key to its entry, for example:
 
