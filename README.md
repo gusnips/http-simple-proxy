@@ -457,9 +457,11 @@ Callback if given will call `function(err)`. This function should be called only
 Perform a zero-downtime reload of configuration. Should be very fast and ports will not stop listening.
 Stopping httpSimpleProxy may be done using `httpSimpleProxy.reload({})`. Which should close all servers.
 
-## Authors
+## Credits
 
-Rewrite work of [https://github.com/virtkick/http-master](https://github.com/virtkick/http-master) to make it simpler  
+Rewrite work of [http-master](https://github.com/virtkick/http-master)  
+
+Thanks to  
 
 * Damian Kaczmarek <damian@myapp.co.uk>
 * Damian Nowak <nowaker@virtkick.com>
