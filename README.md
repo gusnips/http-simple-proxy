@@ -8,7 +8,6 @@
   * [URL rewrite](#url-rewrite)
   * [Redirect](#redirect)
   * [SSL](#ssl)
-  * [Websockify](#websockify)
   * [Logging](#logging)
   * [HTTP authentication](#http-authentication)
   * [Add header](#add-header)
@@ -249,44 +248,6 @@ ports: {
 }
 ```
 
-## Websockify
-Websockify is a feature which can turn any TCP socket to a web socket.
-
-```YAML
-ports: {
-  443: {
-    router: {
-      "myserver.net/services/ssh" : "websockify -> 22"
-    },
-    ssl: {} # ssl should be configured here
-  }
-}
-```
-The above makes it possible to access ssh server over https, for example from the browser. Simply connect to `wss://myserver.net/services/ssh`, it will initiate connection to ssh and proxy raw tcp data. Note: for it to be usable requires someone to implement openssh in asm.js.
-
-To do something in reverse, for example access the above websocket via original ssh client on other machine, one could do the following:
-```
-npm install -g dewebsockify
-dewebsockify wss://myserver.net/services/ssh 2222
-ssh localhost -p 2222 # this will connect to the remote server over HTTPS!!
-```
-
-Another interesting use is running websockify to turn other services such as VNC to be usable by the browser. That's what [noVNC project](http://kanaka.github.io/noVNC/) is already doing. In fact, http-simple-proxy works out of the box with noVNC.
-
-Interesting type of use would be to turn this into a general gateway to any TCP services (auth can be added for some security):
-
-```YAML
-ports: {
-  443: {
-    router: {
-      # call to wss://myserver.net/tcpgate/otherserver.com/22 would connect
-      # to remote server's SSH
-      "myserver.net/tcpgate/*/*" : "websockify -> [1]:[2]"
-    },
-    ssl: {} # ssl should be configured here
-  }
-}
-```
 
 ## Logging
 To enable application log:
