@@ -74,7 +74,7 @@ Proxy is a default action what to do with a http request but in each place where
 ```YAML
 # Short-hand syntax
 ports: {
-  80: 4080
+  80: 443
 }
 ```
 ```YAML
