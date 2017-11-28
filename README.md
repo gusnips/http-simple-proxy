@@ -18,8 +18,7 @@
   * [Serve static directory](#serve-static-directory)
   * [Advanced routing](#advanced-routing)
 * [Class HttpSimpleProxy](#class-httpsimpleproxy)
-* [Authors](#authors)
-* [Sponsors](#sponsors)
+* [Credits](#credits)
 * [License](#license)
 
 
@@ -272,7 +271,7 @@ dewebsockify wss://myserver.net/services/ssh 2222
 ssh localhost -p 2222 # this will connect to the remote server over HTTPS!!
 ```
 
-Another interesting use is running websockify to turn other services such as VNC to be usable by the browser. That's what [noVNC project]{http://kanaka.github.io/noVNC/} is already doing. In fact, http-simple-proxy works out of the box with noVNC.
+Another interesting use is running websockify to turn other services such as VNC to be usable by the browser. That's what [noVNC project](http://kanaka.github.io/noVNC/) is already doing. In fact, http-simple-proxy works out of the box with noVNC.
 
 Interesting type of use would be to turn this into a general gateway to any TCP services (auth can be added for some security):
 
