@@ -3,9 +3,6 @@
 
 * [About](#about)
 * [Installation and basic usage](#installation-and-basic-usage)
-* [Usage as a module](#usage-as-a-module)
-* [Watch config for changes](#watch-config-for-changes)
-* [Use custom config loader](#use-custom-config-loader)
 * Features
   * [Proxy](#proxy)
   * [URL rewrite](#url-rewrite)
@@ -20,8 +17,7 @@
   * [Error handling](#error-handling)
   * [Serve static directory](#serve-static-directory)
   * [Advanced routing](#advanced-routing)
-* [Upstart](#upstart)
-* [Systemd](#systemd)
+* [Class HttpSimpleProxy](#class-httpsimpleproxy)
 * [Authors](#authors)
 * [Sponsors](#sponsors)
 * [License](#license)
@@ -29,9 +25,13 @@
 
 ## About
 
-Rewrite work of [https://github.com/virtkick/http-master](https://github.com/virtkick/http-master) to make it simpler  
+Rewrite work of [http-master](https://github.com/virtkick/http-master) to make it simpler, if you need a more robust approach use [http-master](https://github.com/virtkick/http-master)  
 
-http-simple-proxy is a front end http service with with easy setup of reverse proxy/redirecting/other-actions logic. It means it was designed to run on your port 80 and 443 but can run on any. It can run as a module or as a standalone application. Your average use case could be having several web applications (node.js, rails, Java etc.) running on different internal ports and Apache running on port 8080. http-simple-proxy allows you to easily define rules which domain should target which server and if no rules match, everything else could go to the Apache server. This way you setup your SSL in one place, in http-simple-proxy and even non-SSL compatible http server can be provided with HTTPS. Many different flexible routing configurations are possible to set up.
+http-simple-proxy is a front end http service with with easy setup of reverse proxy/redirecting/other-actions logic.   
+It means it was designed to run on your port 80 and 443 but can run on any.  
+It can run as a module or as a standalone application. Your average use case could be having several web applications (node.js, rails, Java etc.) running on different internal ports and Apache running on port 8080.  
+http-simple-proxy allows you to easily define rules which domain should target which server and if no rules match, everything else could go to the Apache server.  
+This way you setup your SSL in one place, in http-simple-proxy and even non-SSL compatible http server can be provided with HTTPS. Many different flexible routing configurations are possible to set up.
 
 Some of the features:
 * Same HTTPS configuration of https module
@@ -46,130 +46,26 @@ Some of the features:
   * Allows flexible definition of matching behaviour.
   * Enable compression on one, any or all of the routes.
   * Add headers to any defined route.
-* Supports unicode domains out of the box.
-* Multi-core/cpu friendly. Runs multiple instances/workers which will serve connections in a round-robin fashion. You can of course choose to run in a single process  without any workers, if you use http-simple-proxy as a module or set worker count to 0.
-* Automatically watches for config changes and reloads the logic without any downtime. Simply start the deamon and add new rules while having the http-simple-proxy online.
-* Possibility to load config from Redis/etcd or another remote resource. (\*\*)
-* May drop privileges to user/group once started.
 
 
 ## Installation and basic usage
-Refer to section [Usage as a module](#usage-as-a-module) if you are interested in that use-case.
 
-To install, Node.JS is required to be installed and in your PATH:
-`npm install -g http-simple-proxy` (may be needed to run as root depending on your setup)
-
-To run: `http-simple-proxy --config http-simple-proxy.conf`
-
-Config files may be written in either JSON or YAML. For the sake of documentation (YAML allows comments) all examples will be written in YAML (but with JSON style).
-
-Simple example config (more advanced features are convered elsewhere):
-
-```YAML
-watchConfig: true # watch config file for changes
-ports: { # each port gets a separate configuration
-  80: {
-    router: {
-      # redirect http to https
-      'localhost': 'redirect -> https://localhost/[path]'
-      # Proxy all traffic at domain localhost to port 8099
-      'localhost' : 8099,
-      # Proxy all traffic for any subdomains of services.com to IP 192.168.10.6 and port 8099
-      '*.services.com' : '192.168.10.6:8099',
-      # Proxy remaning traffic to port 8080, for example Apache could run there
-      '*' : 8080
-    }
-  }
-  443: {
-    router: {
-      'chat.localhost': '127.0.0.1:3000',
-       # choose application depending on path
-      'myapp.com/api/*': 10443,
-       # choose application depending on path
-      'service.myapp.com/uploads/*': 15000,
-      # all remaining https traffic goes to port 4443, for example apache
-      "*": "127.0.0.1:4443"
-    },
-    ssl: {
-      "key": "/path/to/crt/myapp.co.uk.key",
-      "crt": "/path/to/crt/myapp.co.uk.crt",
-      "ca" : "/path/to/cabundle/ca.pem" # may be an array if not bundle
-    }
-  },
-  middleware: ['log -> /path/to/access.log' ], # Totally optional access.log, other middleware such as gzip could be added here
-  modules: {
-    appLog: '/path/to/app.log'
-  },
-  silent: false # if using above appLog, you can silence standard output
-}
-```
-
-Alternatively you may setup ssl manually:
-```YAML
-# this part belongs to some port configuration
-ssl : {
-  "key": "/path/to/crt/myapp.co.uk.key",
-  "crt": "/path/to/crt/myapp.co.uk.crt",
-  "ca" : "/path/to/cabundle/ca.pem" # may be an array if not bundle
-}
-```
-
-
-## Usage as a module
-
-```
+```bash
 npm install --save http-simple-proxy
 ```
+
 ```JavaScript
 var HttpSimpleProxy = require('http-simple-proxy');
 var httpSimpleProxy = new HttpSimpleProxy();
 httpSimpleProxy.init({
  // your config in here
 }, function(err) {
+  if(err)
+    console.error('Proxy error:', err)
  // listening
+ console.info('http-simple-proxy started')
 });
 ```
-#### Class: HttpSimpleProxy
-
-#### Event: 'allWorkersStarted'
-`function()`
-Emitted after succesful `.init()`
-
-#### Event: 'allWorkersReloaded'
-`function()`
-Emitted after succesful `.reload()`
-
-#### Event: 'logNotice'
-`function(msg)`
-Helpful logging information in case something got wrong.
-
-#### Event: 'logError'
-`function(msg)`
-Information about errors that could be logged.
-
-#### Event: 'error'
-`function(err)`
-Emitted on failure to listen on any sockets/routes or failure to use given configuration.
-
-#### httpSimpleProxy.init(config, [callback])
-Initialize http master with a given config. See the section about config to learn about acceptable input.
-Callback if given will call `function(err)`. This function should be called only once.
-
-#### httpSimpleProxy.reload(config, [callback])
-Perform a zero-downtime reload of configuration. Should be very fast and ports will not stop listening.
-Stopping httpSimpleProxy may be done using `httpSimpleProxy.reload({})`. Which should close all servers.
-
-Note: Changing workerCount is the only thing that may not change.
-
-
-## Watch config for changes
-
-Add `--watch` or add to config `"watchConfig": true`.
-
-You may also trigger reload manually by sending USR1 signal to the master process. (only on \*nix)
-
-If you run via systemd then you may use the following `systemctl reload http-simple-proxy.service`
-
 
 ## Proxy
 Proxy is a default action what to do with a http request but in each place where a number or host are used, you could do a redirect as well.
@@ -531,21 +427,35 @@ ports: {
 ```
 Please open an issue to request more docs.
 
-## Systemd
+## Class HttpSimpleProxy
 
-We provide an example systemd unit file. The config file is set to /etc/http-simple-proxy/http-simple-proxy.conf by default. Copy the `http-simple-proxy.service` to /etc/systemd/system to use it.
+#### Event: 'allWorkersStarted'
+`function()`
+Emitted after succesful `.init()`
 
-* `systemctl start/stop/restart http-simple-proxy`
-* `systemctl enable http-simple-proxy` - auto-start
-* `systemctl reload http-simple-proxy` - reload config with `kill -USR1`
+#### Event: 'allWorkersReloaded'
+`function()`
+Emitted after succesful `.reload()`
 
-## Upstart
+#### Event: 'logNotice'
+`function(msg)`
+Helpful logging information in case something got wrong.
 
-Also provided is `http-simple-proxy-upstart.conf` which can be used with Upstart. As above, the config file is set to /etc/http-simple-proxy/http-simple-proxy.conf by default. Copy `http-simple-proxy-upstart.conf` to `/etc/init/http-simple-proxy.conf` to use it.
+#### Event: 'logError'
+`function(msg)`
+Information about errors that could be logged.
 
-* `service http-simple-proxy start`
-* `service http-simple-proxy stop`
-* `service http-simple-proxy restart`
+#### Event: 'error'
+`function(err)`
+Emitted on failure to listen on any sockets/routes or failure to use given configuration.
+
+#### httpSimpleProxy.init(config, [callback])
+Initialize http master with a given config. See the section about config to learn about acceptable input.
+Callback if given will call `function(err)`. This function should be called only once.
+
+#### httpSimpleProxy.reload(config, [callback])
+Perform a zero-downtime reload of configuration. Should be very fast and ports will not stop listening.
+Stopping httpSimpleProxy may be done using `httpSimpleProxy.reload({})`. Which should close all servers.
 
 ## Authors
 
