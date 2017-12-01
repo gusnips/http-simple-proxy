@@ -23,14 +23,17 @@
 
 ## About
 
-Rewrite work of [http-master](https://github.com/virtkick/http-master) to make it simpler, if you need a more robust approach use [http-master](https://github.com/virtkick/http-master)  
-
-http-simple-proxy is a front end http service with with easy setup of reverse proxy/redirecting/other-actions logic.   
+http-simple-proxy exists so you can run multiple applications on the same port  
+  
+This is a rewrite work of [http-master](https://github.com/virtkick/http-master) to make it simpler, if you need a more robust approach use [http-master](https://github.com/virtkick/http-master)  
+  
+It is a front end http service with with easy setup of reverse proxy/redirecting/other-actions logic.   
 It means it was designed to run on your port 80 and 443 but can run on any.  
-It can run as a module or as a standalone application. Your average use case could be having several web applications (node.js, rails, Java etc.) running on different internal ports and Apache running on port 8080.  
+  
 http-simple-proxy allows you to easily define rules which domain should target which server and if no rules match, everything else could go to the Apache server.  
+  
 This way you setup your SSL in one place, in http-simple-proxy and even non-SSL compatible http server can be provided with HTTPS. Many different flexible routing configurations are possible to set up.
-
+  
 Some of the features:
 * Same HTTPS configuration of https module
 * Supports web sockets.
