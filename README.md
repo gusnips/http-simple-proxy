@@ -8,7 +8,6 @@
   * [URL rewrite](#url-rewrite)
   * [Redirect](#redirect)
   * [SSL](#ssl)
-  * [Websockify](#websockify)
   * [Logging](#logging)
   * [HTTP authentication](#http-authentication)
   * [Add header](#add-header)
@@ -18,21 +17,23 @@
   * [Serve static directory](#serve-static-directory)
   * [Advanced routing](#advanced-routing)
 * [Class HttpSimpleProxy](#class-httpsimpleproxy)
-* [Authors](#authors)
-* [Sponsors](#sponsors)
+* [Credits](#credits)
 * [License](#license)
 
 
 ## About
 
-Rewrite work of [http-master](https://github.com/virtkick/http-master) to make it simpler, if you need a more robust approach use [http-master](https://github.com/virtkick/http-master)  
-
-http-simple-proxy is a front end http service with with easy setup of reverse proxy/redirecting/other-actions logic.   
+http-simple-proxy exists so you can run multiple applications on the same port  
+  
+This is a rewrite work of [http-master](https://github.com/virtkick/http-master) to make it simpler, if you need a more robust approach use [http-master](https://github.com/virtkick/http-master)  
+  
+It is a front end http service with with easy setup of reverse proxy/redirecting/other-actions logic.   
 It means it was designed to run on your port 80 and 443 but can run on any.  
-It can run as a module or as a standalone application. Your average use case could be having several web applications (node.js, rails, Java etc.) running on different internal ports and Apache running on port 8080.  
+  
 http-simple-proxy allows you to easily define rules which domain should target which server and if no rules match, everything else could go to the Apache server.  
+  
 This way you setup your SSL in one place, in http-simple-proxy and even non-SSL compatible http server can be provided with HTTPS. Many different flexible routing configurations are possible to set up.
-
+  
 Some of the features:
 * Same HTTPS configuration of https module
 * Supports web sockets.
@@ -74,7 +75,7 @@ Proxy is a default action what to do with a http request but in each place where
 ```YAML
 # Short-hand syntax
 ports: {
-  80: 4080
+  80: 443
 }
 ```
 ```YAML
@@ -250,44 +251,6 @@ ports: {
 }
 ```
 
-## Websockify
-Websockify is a feature which can turn any TCP socket to a web socket.
-
-```YAML
-ports: {
-  443: {
-    router: {
-      "myserver.net/services/ssh" : "websockify -> 22"
-    },
-    ssl: {} # ssl should be configured here
-  }
-}
-```
-The above makes it possible to access ssh server over https, for example from the browser. Simply connect to `wss://myserver.net/services/ssh`, it will initiate connection to ssh and proxy raw tcp data. Note: for it to be usable requires someone to implement openssh in asm.js.
-
-To do something in reverse, for example access the above websocket via original ssh client on other machine, one could do the following:
-```
-npm install -g dewebsockify
-dewebsockify wss://myserver.net/services/ssh 2222
-ssh localhost -p 2222 # this will connect to the remote server over HTTPS!!
-```
-
-Another interesting use is running websockify to turn other services such as VNC to be usable by the browser. That's what [noVNC project]{http://kanaka.github.io/noVNC/} is already doing. In fact, http-simple-proxy works out of the box with noVNC.
-
-Interesting type of use would be to turn this into a general gateway to any TCP services (auth can be added for some security):
-
-```YAML
-ports: {
-  443: {
-    router: {
-      # call to wss://myserver.net/tcpgate/otherserver.com/22 would connect
-      # to remote server's SSH
-      "myserver.net/tcpgate/*/*" : "websockify -> [1]:[2]"
-    },
-    ssl: {} # ssl should be configured here
-  }
-}
-```
 
 ## Logging
 To enable application log:
