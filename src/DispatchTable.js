@@ -23,7 +23,7 @@ function splitFirst(str) {
   var m = str.match(/^(\^?[^\/]*)\$?(?:(\/)(\^?)(.*))?$/);
   if(m.length > 2) {
     // make ^/path from /^path
-    return [m[1], m[3] + m[2]+m[4]]; 
+    return [m[1], m[3] + m[2]+m[4]];
   }
   return [m[1]];
 }
@@ -36,7 +36,7 @@ function globStringToRegex(str, specialCh, optionalEnding) {
     inside = inside.replace(/^\\\*$/g, '(?:(?<host>.*))');
     inside = inside.replace(/^\\\*\\\?\\\./g, '(?:(.+)\\.)?');
     inside = inside.replace(/^\\\*\\\./g, '(?:(.+)\\.)');
-    inside = inside.replace(/\\\.\\\*\\\?/g, '(?:\\.([^'+specialCh+']+))?');    
+    inside = inside.replace(/\\\.\\\*\\\?/g, '(?:\\.([^'+specialCh+']+))?');
   }
   else
     inside = inside.replace(/\/\\\*$/g, '(?:\/(?<rest>.*|)|)');
@@ -68,6 +68,8 @@ function postParseKey(entryKey, entry) {
 function DispatchTable(port, params) {
   var parseEntry = params.entryParser;
   var config = params.config;
+  if(!config)
+    console.log('No router config specified. Is this on purpose?')
 
   var self = this;
   this.requestHandler = params.requestHandler;
@@ -105,7 +107,6 @@ function DispatchTable(port, params) {
     }
     entryKey = postParseKey(entryKey, entry);
     port = port || 80;
-
     if (entry.regexp) {
       self.regexpEntries.push(entry);
     } else {
@@ -147,7 +148,7 @@ DispatchTable.prototype.checkPathForReq = function(req, entry) {
         req.match.push(m[i]);
       }
       return true;
-    } 
+    }
   }
   else if(pathname == entry.path) {
     return true;
@@ -161,6 +162,7 @@ DispatchTable.prototype.getTargetForReq = function(req) {
 
   var self = this;
   var target;
+
 
   // look for specific host match first
   // and generic path-only match then
@@ -219,7 +221,6 @@ DispatchTable.prototype.dispatchRequest = function(req, res, next) {
 };
 
 DispatchTable.prototype.handleRequest = DispatchTable.prototype.dispatchRequest;
-
 module.exports = DispatchTable;
 
 module.exports.regexpQuote = regexpQuote;

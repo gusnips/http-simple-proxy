@@ -96,7 +96,6 @@ function createHandlers(portNumber, portConfig) {
   di.bindInstance('portNumber', portNumber);
 
   di.onMissing = function(name) {
-
     var m;
     if ((m = name.match(/(.+)Middleware$/))) {
       name = m[1];
@@ -136,6 +135,8 @@ function createHandlers(portNumber, portConfig) {
       router.requestHandler(req, res, next, target);
     },
     error: function(err, req, res) {
+      if(err)
+        self.logNotice('Request error. '+err.toString())
       var code = 500;
       if (!err)
         code = 503;

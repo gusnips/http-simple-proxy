@@ -16,7 +16,7 @@ function handlerForMiddlewareList(middleware) {
             if (err) {
               return next(err);
             }
-            
+
             runMiddleware(i+1);
           }, middleware[i].dispatchTarget);
         } else {
@@ -52,7 +52,7 @@ module.exports = function RouterMiddleware(di, portConfig, portNumber) {
 
   function parseSingleEntry(entry) {
     var moduleName, entryKey;
-    
+
     if(typeof entry === 'function') {
       return passEntryToModuleInstance(di.resolve(entry), {});
     }

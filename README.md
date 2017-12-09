@@ -24,16 +24,16 @@
 ## About
 
 http-simple-proxy exists so you can run multiple applications on the same port  
-  
+
 This is a rewrite work of [http-master](https://github.com/virtkick/http-master) to make it simpler, if you need a more robust approach use [http-master](https://github.com/virtkick/http-master)  
-  
+
 It is a front end http service with with easy setup of reverse proxy/redirecting/other-actions logic.   
 It means it was designed to run on your port 80 and 443 but can run on any.  
-  
+
 http-simple-proxy allows you to easily define rules which domain should target which server and if no rules match, everything else could go to the Apache server.  
-  
+
 This way you setup your SSL in one place, in http-simple-proxy and even non-SSL compatible http server can be provided with HTTPS. Many different flexible routing configurations are possible to set up.
-  
+
 Some of the features:
 * Same HTTPS configuration of https module
 * Supports web sockets.
@@ -72,13 +72,13 @@ httpSimpleProxy.init({
 Proxy is a default action what to do with a http request but in each place where a number or host are used, you could do a redirect as well.
 
 ### Proxy all requests from port 80 to port 4080
-```YAML
+```javascript
 # Short-hand syntax
 ports: {
   80: 443
 }
 ```
-```YAML
+```javascript
 # A bit longer short-hand syntax (but could be used with ssl)
 ports: {
   443: {
@@ -87,7 +87,7 @@ ports: {
   }
 }
 ```
-```YAML
+```javascript
 # Normal syntax - baseline for extending
 ports: {
   80: {
@@ -99,19 +99,19 @@ ports: {
 ```
 
 ### Proxy by domain name
-```YAML
+```javascript
 ports: {
   80: {
     router: {
-      # two rules will match all domain1.com and www.domain1.com requsts
+      // two rules will match all domain1.com and www.domain1.com requsts
       "domain1.com": 3333,
       "www.domain1.com": 3334,
-      # will match all domain2.com requsts (but not www.domain2.com)
-      # and proxy it to a host with different ip in internal network
+      // will match all domain2.com requsts (but not www.domain2.com)
+      // and proxy it to a host with different ip in internal network
       "domain2.com": "192.168.1.1:80",
-      # this will match every subdomain of domain4.com, but not domain4.com
+      // this will match every subdomain of domain4.com, but not domain4.com
       "*.domain4.com" : "5050",
-      # this will match every subdomain of domain4.com, and domain4.com
+      // this will match every subdomain of domain4.com, and domain4.com
       "*?.domain4.com": "some_machine_by_host:4020"
     }
   }
@@ -119,16 +119,16 @@ ports: {
 ```
 
 ### Proxy by domain name and/or path
-```YAML
+```javascript
 ports: {
   80: {
     router: {
-      # will match domain1.com/path1 or domain1/path/whatever or domain1/path/whatever/whatever
-      # Last * in path match matches everything and makes last slash optional
+      // will match domain1.com/path1 or domain1/path/whatever or domain1/path/whatever/whatever
+      // Last * in path match matches everything and makes last slash optional
       "domain1.com/path1/*" : 5010,
       "domain1.com/path2/*" : 5011,
-      # and rest goes to 5012 - this needs to be defined as patch matching
-      # happens after domain matching
+      // and rest goes to 5012 - this needs to be defined as patch matching
+      // happens after domain matching
       "domain1.com/*" : 5012
     }
   }
@@ -136,7 +136,7 @@ ports: {
 ```
 
 ### Proxy port settings
-```YAML
+```javascript
 ports: {
   80: {
     router: {
@@ -158,21 +158,21 @@ In addition to `router`, following setting could be set per port:
 ## URL rewrite
 All proxy example can be adapted to also do URL rewriting. All matching rules can do either wildcard (implicit) regexp matching explicit regexp matching. Let's focus on implicit first.
 
-```YAML
+```javascript
 ports: {
   80: {
     router: {
-      # * will match all subdomains
-      # http://abc.domain.com will rewrite to -> /abc/
-      # http://abc.domain.com/test will rewrite to -> /abc/test
-      # http://xyz.abc.domain.com/test will rewrite to -> /xyz.abc/test
+      // * will match all subdomains
+      // http://abc.domain.com will rewrite to -> /abc/
+      // http://abc.domain.com/test will rewrite to -> /abc/test
+      // http://xyz.abc.domain.com/test will rewrite to -> /xyz.abc/test
       "*.domain.com": "5050/[1]/[path]"
     }
   }
 }
 ```
 So what if you want to rewrite two levels of subdomains?
-```YAML
+```javascript
 ports: {
   80: {
     router: {
@@ -183,7 +183,7 @@ ports: {
 ```
 
 You can also match paths and rewrite:
-```YAML
+```javascript
 ports: {
   80: {
     router: {
@@ -198,22 +198,22 @@ Everything above and more you can also do with regexp matching which is describe
 Redirect is a feature implemented and invoked in a similiar way to proxy.
 The different is that instead of proxy target, you should point rules to `"redirect -> http://target"`. The way target is constructed often is desired to be dynamic, for example that's how https to http redirect is usually used.
 
-```YAML
+```javascript
 ports: {
   80: {
     router: {
-      # rewrite all http://atlashost.eu/* requests to https://atlashost/eu/*
-      # [path] is a special macro that will be replaced with the request's pathname
-      "atlashost.eu": "https://atlashost.eu/[path]",
-      # for example proxy rest to apache's port
+      // rewrite all http://myapp.eu/* requests to https://myapp/eu/*
+      // [path] is a special macro that will be replaced with the request's pathname
+      "myapp.eu": "https://myapp.eu/[path]",
+      // for example proxy rest to apache's port
       '*' : 80443
     }
   },
   443: {
     router: {
-      # proxy to actual application
-      "atlashost.eu": 3333,
-      # proxy rest to apache
+      // proxy to actual application
+      "myapp.eu": 3333,
+      // proxy rest to apache
       "*": 8080
     },
     ssl: {} # ssl should be configured here
@@ -224,7 +224,7 @@ ports: {
 ## SSL
 SSL can be configured for any port by simply providing "ssl" key to its entry, for example:
 
-```YAML
+```javascript
 ports: {
   443: {
     router: {}, # your rules here
@@ -232,8 +232,8 @@ ports: {
       key: "/path/to/key/domain.key",
       cert: "/path/to/key/domain.crt",
       ca: "/path/to/ca/bundle/ca.pem",
-      # alternatively above could be written as
-      # ca: ["/path/to/ca1.crt", "/path/to/ca2.crt"]
+      // alternatively above could be written as
+      // ca: ["/path/to/ca1.crt", "/path/to/ca2.crt"]
       SNI: {
         "*.myapp.co.uk" : {
           key: "/path/to/key/myapp.key",
@@ -254,7 +254,7 @@ ports: {
 
 ## Logging
 To enable application log:
-```YAML
+```javascript
 ports: {}, # your port config here
 modules: {
   appLog: "/path/to/app.log"
@@ -262,13 +262,13 @@ modules: {
 ```
 
 To enable general access log:
-```YAML
+```javascript
 middleware: ["log -> /path/to/access.log"],
 ports: {} # your port config here
 ```
 
 To enable logging per route (note, consult [Advanced routing](#advanced-routing) for more details)
-```YAML
+```javascript
 ports: {
   80: {
     router: {
@@ -284,7 +284,7 @@ Logging is in apache format.
 Note: you may log to the same file from multiple routes, not a problem.
 
 ## HTTP authentication
-```YAML
+```javascript
 ports: {
   80: {
     router: {
@@ -298,7 +298,7 @@ You can generate one with [node version of htpasswd]{https://www.npmjs.org/packa
 
 ## Add header
 You can add one or more arbitrary requests to incoming headers/
-```YAML
+```javascript
 ports: {
   80: {
     router: {
@@ -312,7 +312,7 @@ ports: {
 
 The single passed argument is compression level, from 1 to 9. 9 is most compression but slowest. To enable compression for all requests:
 
-```YAML
+```javascript
 middleware: ["gzip -> 9"],
 ports: {
   router: {} #your rules here
@@ -320,7 +320,7 @@ ports: {
 ```
 
 To enable compression for a single route:
-```YAML
+```javascript
 ports: {
   router: {
     "domain.com" : ["gzip -> 9", 3333]
@@ -332,7 +332,7 @@ ports: {
 
 Short-hand matching format with using `*` or `*?` can be replaced by using explicit regexp expression, such as this:
 
-```YAML
+```javascript
 ports: {
   80: {
     # [1] will contain app1 or app2, each number will reference regexp catch groups
@@ -346,14 +346,14 @@ Named groups are also supported. Please open an issue to request more docs.
 ## Error handling
 
 HTTP master will report some errors in plain text, you can override this behaviour by providing a custom html error page:
-```YAML
+```javascript
 ports: {}, # your port config here
 errorHtmlFile: "/path/to/error.html"
 ```
 The html file may reference simple images which will be embedded to the response in form of base64. It cannot reference other files. Error html needs to be fast.
 
 You can in fact trigger errors manually as well, for scheduled downtime for example:
-```YAML
+```javascript
 ports: {
   80: {
     # this will report error 503
@@ -364,7 +364,7 @@ ports: {
 
 ## Serve static directory
 You may also serve a static files , example:
-```YAML
+```javascript
 ports: {
   80: {
     "domain.com/*" : "static -> /home/domain/[1]"
@@ -377,7 +377,7 @@ Please open an issue to request more docs.
 
 Advanced routing refers to ability of nesting multiple layers of rules, such as:
 
-```YAML
+```javascript
 ports: {
   80 : {
     "*.domain.com" : ["log -> domain.log", {

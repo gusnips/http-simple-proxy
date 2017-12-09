@@ -76,7 +76,7 @@ module.exports = function ProxyMiddleware(config, portConfig, di) {
       if(!req.headers.host) {
         req.headers.host = '';
       }
-            
+
       var proxyTarget = rewriteTargetAndPathIfNeeded(req, dispatchTarget);
       var m = req.headers.host.match(/^(.+):(\d+)$/);
       if(m) {
