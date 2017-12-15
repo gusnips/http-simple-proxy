@@ -375,7 +375,7 @@ You may also serve a static files , example:
 ```javascript
 ports: {
   80: {
-    "domain.com/*" : "static -> /home/domain/[1]"
+    "domain.com/*" : "static -> /home/domain/"
   }
 }
 ```
