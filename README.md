@@ -376,7 +376,7 @@ You may also serve a static files , example:
 ports: {
   80: {
     "/assets" : "static -> /home/domain/assets",
-    "domain.com/*" : "static -> /home/domain/",
+    "domain.com/*" : "static -> /home/domain/[1]",
   }
 }
 ```
