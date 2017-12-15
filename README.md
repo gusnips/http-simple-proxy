@@ -59,7 +59,14 @@ npm install --save http-simple-proxy
 var HttpSimpleProxy = require('http-simple-proxy');
 var httpSimpleProxy = new HttpSimpleProxy();
 httpSimpleProxy.init({
- // your config in here
+ ports: {
+  80: {
+    router: {
+      // two rules to forward 2 domains to ports
+      "domain1.com": 3333,
+      "www.domain1.com": 3334,
+    },
+  },
 }, function(err) {
   if(err)
     console.error('Proxy error:', err)
