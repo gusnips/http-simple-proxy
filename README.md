@@ -264,7 +264,8 @@ To enable application log:
 ```javascript
 ports: {}, # your port config here
 modules: {
-  appLog: "/path/to/app.log"
+  appLog: "/path/to/app.log", //file log
+  consoleLog: true, //console
 }
 ```
 
