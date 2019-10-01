@@ -67,6 +67,7 @@ httpSimpleProxy.init({
       "www.domain1.com": 3334,
     },
   },
+ }
 }, function(err) {
   if(err)
     console.error('Proxy error:', err)
