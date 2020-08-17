@@ -30,7 +30,7 @@
     "compression": "^1.6.2",
     "connect-gzip-static": "^1.0.0",
     "eventemitter3": "^1.2.0",
-    "extend": "3.0.0",
+    "extend": "3.0.2",
     "greenlock": "^2.1.15",
     "http-auth": "^3.2.3",
     "http-proxy": "^1.16.2",
